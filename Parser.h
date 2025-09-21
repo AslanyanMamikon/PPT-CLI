@@ -15,7 +15,6 @@ struct CommandNode {
 	std::vector <std::string> args;
 };
 
-
 enum class ParserState {
 	START,      // Initial state
 	COMMAND,    // Parsing command word
@@ -40,8 +39,6 @@ class Parser {
 public:
 	Parser(Tokenizer& tz) : tz(tz) {}
 
-	// bool parse(CommandNode& node, std::string& err);
-
 	bool parseDFA(CommandNode& node, std::string& err);
 
 private:
@@ -53,8 +50,5 @@ private:
 	void processStateAction(ParserState state, char c, CommandNode& node, 
 		std::string& currentWord, std::string& currentFlag, std::string& currentValue);
 };
-
-
-
 
 #endif // !PARSER_H_
