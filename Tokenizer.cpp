@@ -2,7 +2,8 @@
 #include "Tokenizer.h"
 
 void Tokenizer::skipSpace() {
-	while (i < s.size() && isspace((unsigned char)s[i])) ++i;
+	while (i < s.size() && isspace((unsigned char)s[i])) 
+		++i;
 }
 
 
@@ -32,8 +33,8 @@ void Tokenizer::advance() {
 	}
 
 	if (c == '-') {
-		size_t j = i + 1;
-		if (j < s.size() && isalpha((unsigned char)s[j])) {
+		size_t j = i ;
+		if (j < s.size() && (isalpha((unsigned char)s[j]) || s[j] == '-')) {
 			std::string out;
 			out += c;
 			++j;
@@ -60,13 +61,11 @@ void Tokenizer::advance() {
 	{
 		std::string out;
 		size_t j = i;
-		while (j < s.size() && !isspace((unsigned char)s[i])) {
-			if (s[j] == '"' || s[j] == '\'') break;
+		while (j < s.size() && !isspace((unsigned char)s[j]) && s[j] != '"' && s[j] != '\'') {
 			out += s[j++];
 		}
 		current = Token(TokenType::WORD, out);
 		i = j;
 		return;
 	}
-
 }
