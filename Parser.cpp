@@ -8,59 +8,6 @@ std::string Parser::toLower(const std::string& s) {
 	}
 	return out;
 }
-/*
-bool Parser::parse(CommandNode& node, std::string& err) {
-	if (tz.eof()) {
-		err = "empty input";
-		return false;
-	}
-
-	Token t = tz.next();
-	if (t.type != TokenType::WORD) {
-		err = "expected command word";
-		return false;
-	}
-
-	node.cmd = toLower(t.text);
-
-	if (tz.eof()) return true;
-
-	Token t2 = tz.peek();
-	if (t2.type == TokenType::WORD) {
-		node.object = toLower(tz.next().text);
-	}
-
-	while (!tz.eof()) {
-		Token tok = tz.next();
-		if (tok.type == TokenType::FLAG) {
-			std::string flag = tok.text;
-
-			Token la = tz.peek();
-			if (la.type == TokenType::STRING ||
-				la.type == TokenType::WORD ||
-				la.type == TokenType::NUMBER) {
-				Token valueTok = tz.next();
-				node.flags[flag] = valueTok.text;
-			}
-			else {
-				node.flags[flag] = "";
-			}
-		}
-		else if (tok.type == TokenType::NUMBER) {
-			node.positionArgs.push_back(tok.text);
-		}
-		else if (tok.type == TokenType::STRING || tok.type == TokenType::WORD) {
-			node.args.push_back(tok.text);
-		}
-		else {
-			// Ignore END token
-		}
-	}
-	return true;
-}
-	
-*/
-
 
 CharCategory Parser::categorizeChar(char c) {
 	if (std::isalpha(c)) return CharCategory::ALPHA;
@@ -247,6 +194,8 @@ bool Parser::parseDFA(CommandNode& node, std::string& err) {
 		CharCategory category = categorizeChar(c);
 		ParserState nextState = getNextState(currentState, category);
 		
+		//processStateAction(nextState, c, node, currentWord, currentFlag, currentValue);	
+
 		if (nextState == ParserState::ERROR) {
 			err = "Invalid character '" + std::string(1, c) + "' at position " + 
 				  std::to_string(i) + " in state " + 
@@ -259,9 +208,9 @@ bool Parser::parseDFA(CommandNode& node, std::string& err) {
 	}
 	
 	if (!currentWord.empty()) {
-		if (currentState == ParserState::COMMAND) {
+		if (currentState == ParserState::COMMAND && node.cmd.empty()) {
 			node.cmd = toLower(currentWord);
-		} else if (currentState == ParserState::OBJECT) {
+		} else if (currentState == ParserState::OBJECT && node.cmd.empty()) {
 			node.object = toLower(currentWord);
 		} else if (std::isdigit(currentWord[0])) {
 			node.positionArgs.push_back(currentWord);
