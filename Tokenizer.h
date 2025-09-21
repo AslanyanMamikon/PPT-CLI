@@ -4,7 +4,13 @@
 #include <string>
 #include <iostream>
 
-enum class TokenType { WORD, FLAG, NUMBER, STRING, END};
+enum class TokenType { 
+	WORD, 
+	FLAG, 
+	NUMBER, 
+	STRING, 
+	END
+};
 
 struct Token {
 	TokenType type;
