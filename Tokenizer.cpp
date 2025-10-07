@@ -1,71 +1,118 @@
-
 #include "Tokenizer.h"
+#include <cctype>
 
-void Tokenizer::skipSpace() {
-	while (i < s.size() && isspace((unsigned char)s[i])) 
-		++i;
+
+Tokenizer::Tokenizer(std::istream& st) : stream(st), bufPos(0), bufEnd(0), atEnd(false)
+{
+	//advance();
+}
+
+// bool Tokenizer::eof() const { return current.type == TokenType::END; }
+bool Tokenizer::eof() const { return atEnd; }
+
+char Tokenizer::nextChar()
+{
+	if (bufPos >= bufEnd)
+	{
+		stream.read(buffer, BUFFER_SIZE);
+		bufEnd = static_cast<size_t>(stream.gcount());
+		bufPos = 0;
+		if (bufEnd == 0)
+		{
+			atEnd = true;
+			return '\0';
+		}
+	}
+	return buffer[bufPos++];
+}
+
+const Token& Tokenizer::getToken()
+{
+	const Token& tok = current;
+	advance(); 
+	// const Token& tok = current;
+	return tok;
 }
 
 
-void Tokenizer::advance() {
-	skipSpace();
-	if (i >= s.size()) {
-		current = Token(TokenType::END, "");
-		return;
-	}
+void Tokenizer::advance()
+{
+    if (atEnd) {
+        current = { TokenType::END, "" };
+        return;
+    }
 
-	char c = s[i];
-	if (c == '"' || c == '\'') {
-		char quote = c; ++i;
-		std::string out;
-		while (i < s.size() && s[i] != quote) {
-			if (s[i] == '\\' && i + 1 < s.size()) {
-				out += s[i + 1];
-				i += 2;
-			}
-			else {
-				out += s[i++];
-			}
-		}
-		if (i < s.size() && s[i] == quote) ++i;
-		current = Token(TokenType::STRING, out);
-		return;
-	}
+    // Skip whitespace
+    char c;
+    do {
+        c = nextChar();
+        if (atEnd) {
+            current = { TokenType::END, "" };
+            return;
+        }
+    } while (isspace(static_cast<unsigned char>(c)));
 
-	if (c == '-') {
-		size_t j = i ;
-		if (j < s.size() && (isalpha((unsigned char)s[j]) || s[j] == '-')) {
-			std::string out;
-			out += c;
-			++j;
-			while (j < s.size() && (isalnum((unsigned char)s[j]) || s[j] == '-' || s[j] == '.' || s[j] == '_')) {
-				out += s[j++];
-			}
-			current = Token(TokenType::FLAG, out);
-			i = j;
-			return;
-		}
-	}
+    // Flag (starts with -)
+    if (c == '-') {
+        std::string flag(1, c);
+        while (!atEnd) {
+            char peek = nextChar();
+            if (atEnd || isspace(static_cast<unsigned char>(peek))) {
+                if (!atEnd) bufPos--; // put back if space
+                break;
+            }
+            flag.push_back(peek);
+        }
+        current = { TokenType::FLAG, flag };
+        return;
+    }
 
-	if (isdigit((unsigned char)c)) {
-		std::string out;
-		size_t j = i;
-		while (j < s.size() && (isdigit((unsigned char)s[j]) || s[j] == ',')) {
-			out += s[j++];
-		}
-		current = Token(TokenType::NUMBER, out);
-		i = j;
-		return;
-	}
+    // Number (sequence of digits, optional dot)
+    if (isdigit(static_cast<unsigned char>(c))) {
+        std::string num(1, c);
+        while (!atEnd) {
+            char peek = nextChar();
+            if (isdigit(static_cast<unsigned char>(peek)) || peek == '.') {
+                num.push_back(peek);
+            }
+            else {
+                bufPos--; // put back
+                break;
+            }
+        }
+        current = { TokenType::NUMBER, num };
+        return;
+    }
 
-	{
-		std::string out;
-		size_t j = i;
-		while (j < s.size() && !isspace((unsigned char)s[j]) && s[j] != '"' && s[j] != '\'') {
-			out += s[j++];
-		}
-		current = Token(TokenType::WORD, out);
-		i = j;
-		return;
-	}
+    // Word (letters, digits, underscore until whitespace or punctuation)
+    if (isalpha(static_cast<unsigned char>(c))) {
+        std::string word(1, c);
+        while (!atEnd) {
+            char peek = nextChar();
+            if (isalnum(static_cast<unsigned char>(peek)) || peek == '_' || peek == '.') {
+                word.push_back(peek);
+            }
+            else {
+                bufPos--; // stop at non-alnum
+                break;
+            }
+        }
+        current = { TokenType::WORD, word };
+        return;
+    }
+
+    // String literal
+    if (c == '"') {
+        std::string str;
+        while (!atEnd) {
+            c = nextChar();
+            if (c == '"' || atEnd) break;
+            str.push_back(c);
+        }
+        current = { TokenType::STRING, str };
+        return;
+    }
+
+    // Otherwise unknown single character
+    current = { TokenType::UNKNOWN, std::string(1, c) };
 }

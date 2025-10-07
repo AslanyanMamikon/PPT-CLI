@@ -26,29 +26,20 @@ enum class ParserState {
 	END         // End state
 };
 
-enum class CharCategory {
-	ALPHA,      // Alphabetic characters
-	DIGIT,      // Numeric characters
-	DASH,       // Dash character (-)
-	QUOTE,      // Quote characters (" or ')
-	SPACE,      // Whitespace
-	OTHER       // Any other character
-};
-
 class Parser {
 public:
-	Parser(Tokenizer& tz) : tz(tz) {}
+	
+	Parser(std::istream& st) : stream(st), tz(stream) { }
 
 	bool parseDFA(CommandNode& node, std::string& err);
 
 private:
-	Tokenizer& tz;
+	std::istream& stream; // arji???????? ete miiangamic stacatsy poxancum a tz-in;
+	Tokenizer tz;
 	static std::string toLower(const std::string& s);
 	
-	CharCategory categorizeChar(char c);
-	ParserState getNextState(ParserState currentState, CharCategory category);
-	void processStateAction(ParserState state, char c, CommandNode& node, 
-		std::string& currentWord, std::string& currentFlag, std::string& currentValue);
+	static const ParserState transitionTable[static_cast<int>(ParserState::END) + 1][static_cast<int>(TokenType::UNKNOWN) + 1];
+
 };
 
 #endif // !PARSER_H_

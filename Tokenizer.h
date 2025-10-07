@@ -4,39 +4,43 @@
 #include <string>
 #include <iostream>
 
-enum class TokenType { 
-	WORD, 
-	FLAG, 
-	NUMBER, 
-	STRING, 
-	END
+constexpr size_t BUFFER_SIZE = 1024;
+
+enum class TokenType {
+	WORD,
+	FLAG,
+	NUMBER,
+	STRING,
+	END,
+	UNKNOWN
 };
 
 struct Token {
 	TokenType type;
 	std::string text;
-	Token (TokenType t = TokenType::END, std::string s=""): 
-		type(t), text(std::move(s)) {}
+	Token(TokenType t = TokenType::END, std::string s = "") :
+		type(t), text(std::move(s)) {
+	}
 };
 
 class Tokenizer {
 public:
-	Tokenizer(const std::string& line) : s(line), i(0) { advance(); }
+	explicit Tokenizer(std::istream& st);
 
-	Token peek() const { return current; }
-	Token next() {
-		Token temp = current;
-		advance();
-		return temp;
-	}
-	bool eof() const { return current.type == TokenType::END; }
+	const Token& getToken();
+	bool eof() const;
+
 private:
-	std::string s;
-	size_t i;
+	std::istream& stream;
 	Token current;
 
-	void skipSpace();
+	char buffer[BUFFER_SIZE];
+	size_t bufPos;
+	size_t bufEnd;
+	bool atEnd;
+
 	void advance();
+	char nextChar();
 };
 
-#endif // !TOKENIZER_H_
+#endif // !TOKENIZER_H_
