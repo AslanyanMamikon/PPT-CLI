@@ -2,12 +2,8 @@
 #include <cctype>
 
 
-Tokenizer::Tokenizer(std::istream& st) : stream(st), bufPos(0), bufEnd(0), atEnd(false)
-{
-	//advance();
-}
+Tokenizer::Tokenizer(std::istream& st) : stream(st), bufPos(0), bufEnd(0), atEnd(false) { }
 
-// bool Tokenizer::eof() const { return current.type == TokenType::END; }
 bool Tokenizer::eof() const { return atEnd; }
 
 char Tokenizer::nextChar()
@@ -42,7 +38,6 @@ void Tokenizer::advance()
         return;
     }
 
-    // Skip whitespace
     char c;
     do {
         c = nextChar();
@@ -52,7 +47,6 @@ void Tokenizer::advance()
         }
     } while (isspace(static_cast<unsigned char>(c)));
 
-    // Flag (starts with -)
     if (c == '-') {
         std::string flag(1, c);
         while (!atEnd) {
@@ -67,7 +61,6 @@ void Tokenizer::advance()
         return;
     }
 
-    // Number (sequence of digits, optional dot)
     if (isdigit(static_cast<unsigned char>(c))) {
         std::string num(1, c);
         while (!atEnd) {
@@ -76,7 +69,7 @@ void Tokenizer::advance()
                 num.push_back(peek);
             }
             else {
-                bufPos--; // put back
+                bufPos--;
                 break;
             }
         }
@@ -84,7 +77,6 @@ void Tokenizer::advance()
         return;
     }
 
-    // Word (letters, digits, underscore until whitespace or punctuation)
     if (isalpha(static_cast<unsigned char>(c))) {
         std::string word(1, c);
         while (!atEnd) {
@@ -93,7 +85,7 @@ void Tokenizer::advance()
                 word.push_back(peek);
             }
             else {
-                bufPos--; // stop at non-alnum
+                bufPos--;
                 break;
             }
         }
@@ -101,7 +93,6 @@ void Tokenizer::advance()
         return;
     }
 
-    // String literal
     if (c == '"') {
         std::string str;
         while (!atEnd) {
@@ -113,6 +104,6 @@ void Tokenizer::advance()
         return;
     }
 
-    // Otherwise unknown single character
     current = { TokenType::UNKNOWN, std::string(1, c) };
+
 }
