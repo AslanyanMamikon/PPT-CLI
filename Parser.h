@@ -34,7 +34,7 @@ public:
 	bool parseDFA(CommandNode& node, std::string& err);
 
 private:
-	std::istream& stream; // arji???????? ete miiangamic stacatsy poxancum a tz-in;
+	std::istream& stream;
 	Tokenizer tz;
 	static std::string toLower(const std::string& s);
 	
@@ -43,3 +43,4 @@ private:
 };
 
 #endif // !PARSER_H_
+
