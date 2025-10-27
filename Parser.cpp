@@ -1,93 +1,107 @@
 #include "Parser.h"
+#include "CommandFactory.h"
 #include <cctype>
-
-std::string Parser::toLower(const std::string& s) {
-	std::string out = s;
-	for (char& c : out) {
-		c = tolower((unsigned char)c);
-	}
-	return out;
-}
+#include <algorithm>
 
 const ParserState Parser::transitionTable[][6] = {
-	//							WORD          FLAG			      NUMBER		   STRING			  END			     UNKNOWN
-	/* START  */ { ParserState::COMMAND, ParserState::FLAG, ParserState::ARG, ParserState::ARG, ParserState::END, ParserState::ERROR },
-	/* COMMAND*/ { ParserState::OBJECT, ParserState::FLAG, ParserState::ARG, ParserState::ARG, ParserState::END, ParserState::ERROR },
-	/* OBJECT */ { ParserState::OBJECT,  ParserState::FLAG, ParserState::ARG, ParserState::ARG, ParserState::END, ParserState::ERROR },
-	/* FLAG   */ { ParserState::FLAG_VALUE, ParserState::FLAG, ParserState::FLAG_VALUE, ParserState::FLAG_VALUE, ParserState::END, ParserState::ERROR },
-	/* FLAG_VAL*/{ ParserState::ARG,   ParserState::FLAG, ParserState::ARG, ParserState::ARG, ParserState::END, ParserState::ERROR },
-	/* ARG    */ { ParserState::ARG,   ParserState::FLAG, ParserState::ARG, ParserState::ARG, ParserState::END, ParserState::ERROR },
+    //                WORD              FLAG              NUMBER            STRING            END               UNKNOWN
+    /* START     */ { ParserState::COMMAND, ParserState::FLAG, ParserState::ARG, ParserState::ARG, ParserState::END, ParserState::ERROR },
+    /* COMMAND   */ { ParserState::OBJECT,  ParserState::FLAG, ParserState::ARG, ParserState::ARG, ParserState::END, ParserState::ERROR },
+    /* OBJECT    */ { ParserState::ARG,     ParserState::FLAG, ParserState::ARG, ParserState::ARG, ParserState::END, ParserState::ERROR },
+    /* FLAG      */ { ParserState::FLAG_VALUE, ParserState::FLAG, ParserState::FLAG_VALUE, ParserState::FLAG_VALUE, ParserState::END, ParserState::ERROR },
+    /* FLAG_VALUE*/ { ParserState::ARG,     ParserState::FLAG, ParserState::ARG, ParserState::ARG, ParserState::END, ParserState::ERROR },
+    /* ARG       */ { ParserState::ARG,     ParserState::FLAG, ParserState::ARG, ParserState::ARG, ParserState::END, ParserState::ERROR },
+    /* ERROR     */ { ParserState::ERROR,   ParserState::ERROR, ParserState::ERROR, ParserState::ERROR, ParserState::ERROR, ParserState::ERROR }
 };
 
-bool Parser::parseDFA(CommandNode& node, std::string& err) {
-	node.cmd.clear();
-	node.object.clear();
-	node.flags.clear();
-	node.args.clear();
-	node.positionArgs.clear();
+Parser::Parser(std::istream& stream) : tz(stream) {}
 
-	ParserState state = ParserState::START;
-	std::string currentWord;
-	std::string currentFlag;
-	std::string currentValue;
-
-	while (!tz.eof())
-	{
-		const Token& tok = tz.getToken();
-
-		ParserState next = transitionTable[(int)state][(int)tok.type];
-		if (next == ParserState::ERROR)
-		{
-			err = "Unexpected token '" + tok.text + "' in state " + std::to_string((int)state);
-			return false;
-		}
-		
-		state = next;
-		
-		switch (state)
-		{
-		case ParserState::COMMAND:
-			if (tok.type == TokenType::WORD)
-				node.cmd = toLower(tok.text);
-			break;
-
-		case ParserState::OBJECT:
-			if (tok.type == TokenType::WORD)
-				node.object = toLower(tok.text);
-			break;
-
-		case ParserState::FLAG:
-			if (tok.type == TokenType::FLAG)
-			{
-				currentFlag = tok.text;
-				node.flags[currentFlag] = "";
-			}
-			break;
-
-		case ParserState::FLAG_VALUE:
-			node.flags[currentFlag] = tok.text;
-			currentFlag.clear();
-			break;
-
-		case ParserState::ARG:
-			if (tok.type == TokenType::NUMBER)
-				node.positionArgs.push_back(tok.text);
-			else
-				node.args.push_back(tok.text);
-			break;
-
-		default:
-			break;
-		}
-
-		if (tok.type == TokenType::END)
-			break;
-	}
-
-	if (node.cmd.empty())
-	{
-		err = "No command found";
-		return false;
-	}
-	return true;
+std::string Parser::toLower(const std::string& s) {
+    std::string out = s;
+    std::transform(out.begin(), out.end(), out.begin(),
+        [](unsigned char c) { return std::tolower(c); });
+    return out;
 }
+
+std::unique_ptr<ICommand> Parser::parse() {
+    errorMsg.clear();
+
+    std::string cmd;
+    std::string object;
+    std::unordered_map<std::string, std::string> flags;
+    std::vector<std::string> args;
+
+    ParserState state = ParserState::START;
+    std::string currentFlag;
+
+    while (!tz.eof()) {
+        const Token& tok = tz.getToken();
+
+        int stateIdx = static_cast<int>(state);
+        int tokenIdx = static_cast<int>(tok.type);
+
+        ParserState next = transitionTable[stateIdx][tokenIdx];
+
+        if (next == ParserState::ERROR) {
+            errorMsg = "Unexpected token '" + tok.text + "' in state " +
+                std::to_string(stateIdx);
+            return nullptr;
+        }
+
+        state = next;
+
+        switch (state) {
+        case ParserState::COMMAND:
+            if (tok.type == TokenType::WORD) {
+                cmd = toLower(tok.text);
+            }
+            break;
+
+        case ParserState::OBJECT:
+            if (tok.type == TokenType::WORD) {
+                object = toLower(tok.text);
+            }
+            break;
+
+        case ParserState::FLAG:
+            if (tok.type == TokenType::FLAG) {
+                currentFlag = tok.text;
+                flags[currentFlag] = "";
+            }
+            break;
+
+        case ParserState::FLAG_VALUE:
+            flags[currentFlag] = tok.text;
+            currentFlag.clear();
+            break;
+
+        case ParserState::ARG:
+            args.push_back(tok.text);
+            break;
+
+        case ParserState::END:
+            break;
+
+        default:
+            break;
+        }
+
+        if (tok.type == TokenType::END) {
+            break;
+        }
+    }
+
+    if (cmd.empty()) {
+        errorMsg = "No command found";
+        return nullptr;
+    }
+    try {
+        return CommandFactory::createCommand(cmd, object, flags, args);
+    }
+    catch (const CommandValidationException& e) 
+    {
+        errorMsg = e.what();
+        return nullptr;
+    }
+}
+

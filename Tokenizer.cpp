@@ -4,6 +4,7 @@
 
 Tokenizer::Tokenizer(std::istream& st) : stream(st), bufPos(0), bufEnd(0), atEnd(false) { }
 
+// bool Tokenizer::eof() const { return current.type == TokenType::END; }
 bool Tokenizer::eof() const { return atEnd; }
 
 char Tokenizer::nextChar()
@@ -52,7 +53,7 @@ void Tokenizer::advance()
         while (!atEnd) {
             char peek = nextChar();
             if (atEnd || isspace(static_cast<unsigned char>(peek))) {
-                if (!atEnd) bufPos--; // put back if space
+                if (!atEnd) bufPos--;
                 break;
             }
             flag.push_back(peek);
@@ -105,5 +106,4 @@ void Tokenizer::advance()
     }
 
     current = { TokenType::UNKNOWN, std::string(1, c) };
-
 }

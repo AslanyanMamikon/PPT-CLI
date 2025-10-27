@@ -7,7 +7,7 @@
 constexpr size_t BUFFER_SIZE = 1024;
 
 enum class TokenType {
-	WORD,
+	WORD, // add, slide, create ...
 	FLAG,
 	NUMBER,
 	STRING,
