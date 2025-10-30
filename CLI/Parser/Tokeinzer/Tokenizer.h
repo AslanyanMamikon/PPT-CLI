@@ -43,4 +43,4 @@ private:
 	char nextChar();
 };
 
-#endif // !TOKENIZER_H_
+#endif //Â !TOKENIZER_H_
