@@ -1,5 +1,5 @@
-#ifndef ADD_COMMAND_H_
-#define ADD_COMMAND_H_
+#ifndef REMOVE_COMMAND_H_
+#define REMOVE_COMMAND_H_
 
 #include "ICommand.h"
 #include "Argument.h"
@@ -9,14 +9,14 @@
 #include <iostream>
 #include <sstream>
 
-class AddSlideCommand : public ICommand {
+class RemoveSlideCommand : public ICommand {
 private:
     std::string object;
     std::unordered_map<std::string, std::string> flags;
     std::vector<std::string> args;
 
 public:
-    AddSlideCommand(const std::string& obj,
+    RemoveSlideCommand(const std::string& obj,
         const std::unordered_map<std::string, std::string>& f,
         const std::vector<std::string>& a)
         : object(obj), flags(f), args(a)
@@ -29,9 +29,6 @@ public:
 
 protected:
     void validate() const override;
-
-private:
-    std::vector<int> parsePosition(const std::string& posStr) const;
 };
 
-#endif // !ADD_COMMAND_H_
+#endif // !REMOVE_COMMAND_H_

@@ -1,5 +1,5 @@
-#ifndef ADD_COMMAND_H_
-#define ADD_COMMAND_H_
+#ifndef LIST_COMMAND_H_
+#define LIST_COMMAND_H_
 
 #include "ICommand.h"
 #include "Argument.h"
@@ -9,14 +9,14 @@
 #include <iostream>
 #include <sstream>
 
-class AddSlideCommand : public ICommand {
+class ListSlidesCommand : public ICommand {
 private:
     std::string object;
     std::unordered_map<std::string, std::string> flags;
     std::vector<std::string> args;
 
 public:
-    AddSlideCommand(const std::string& obj,
+    ListSlidesCommand(const std::string& obj,
         const std::unordered_map<std::string, std::string>& f,
         const std::vector<std::string>& a)
         : object(obj), flags(f), args(a)
@@ -25,13 +25,11 @@ public:
     }
 
     void execute(Presentation& presentation) override;
+
     std::string getName() const override;
 
 protected:
     void validate() const override;
-
-private:
-    std::vector<int> parsePosition(const std::string& posStr) const;
 };
 
-#endif // !ADD_COMMAND_H_
+#endif // !LIST_COMMAND_H_
