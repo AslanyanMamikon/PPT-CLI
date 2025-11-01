@@ -13,7 +13,8 @@ public:
         const std::string& cmd,
         const std::string& object,
         const std::unordered_map<std::string, std::string>& flags,
-        const std::vector<std::string>& args);
+        const std::vector<std::string>& args,
+        bool* exitFlag = nullptr);
 };
 
 #endif // COMMAND_FACTORY_H_
