@@ -24,13 +24,14 @@ class Parser {
 public:
     explicit Parser(std::istream& stream);
 
-    std::unique_ptr<ICommand> parse();
+    std::unique_ptr<ICommand> parse(bool* exitFlag = nullptr);
 
     const std::string& getError() const { return errorMsg; }
 
 private:
     Tokenizer tz;
     std::string errorMsg;
+    bool* exitFlagPtr;
 
 private:
     static std::string toLower(const std::string& s);

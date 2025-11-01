@@ -14,16 +14,19 @@ const ParserState Parser::transitionTable[][6] = {
     /* ERROR     */ { ParserState::ERROR,   ParserState::ERROR, ParserState::ERROR, ParserState::ERROR, ParserState::ERROR, ParserState::ERROR }
 };
 
-Parser::Parser(std::istream& stream) : tz(stream) {}
+Parser::Parser(std::istream& stream) : tz(stream), exitFlagPtr(nullptr) {}
 
-std::string Parser::toLower(const std::string& s) {
+std::string Parser::toLower(const std::string& s) 
+{
     std::string out = s;
     std::transform(out.begin(), out.end(), out.begin(),
         [](unsigned char c) { return std::tolower(c); });
     return out;
 }
 
-std::unique_ptr<ICommand> Parser::parse() {
+std::unique_ptr<ICommand> Parser::parse(bool* exitFlag) 
+{
+    exitFlagPtr = exitFlag;
     errorMsg.clear();
 
     std::string cmd;
@@ -96,7 +99,7 @@ std::unique_ptr<ICommand> Parser::parse() {
         return nullptr;
     }
     try {
-        return CommandFactory::createCommand(cmd, object, flags, args);
+        return CommandFactory::createCommand(cmd, object, flags, args, exitFlagPtr);
     }
     catch (const CommandValidationException& e) 
     {
