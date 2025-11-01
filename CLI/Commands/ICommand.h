@@ -5,7 +5,7 @@
 #include <string>
 #include <stdexcept>
 
-class Presentation; 
+class Presentation; // Forward declaration -------------------------------
 
 class CommandValidationException : public std::runtime_error {
 public:
@@ -21,7 +21,7 @@ public:
     virtual std::string getName() const = 0;
 
 protected:
-    //virtual void validate() const = 0;
+    virtual void validate() const = 0;
 };
 
 #endif // ICOMMAND_H_
