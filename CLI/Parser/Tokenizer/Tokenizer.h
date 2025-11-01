@@ -19,8 +19,7 @@ struct Token {
 	TokenType type;
 	std::string text;
 	Token(TokenType t = TokenType::END, std::string s = "") :
-		type(t), text(std::move(s)) {
-	}
+		type(t), text(std::move(s)) {}
 };
 
 class Tokenizer {
@@ -43,4 +42,4 @@ private:
 	char nextChar();
 };
 
-#endif //Â !TOKENIZER_H_
+#endif // !TOKENIZER_H_
