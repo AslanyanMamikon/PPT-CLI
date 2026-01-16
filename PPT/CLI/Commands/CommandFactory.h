@@ -8,6 +8,9 @@
 #include "ICommand.h"
 #include "Editor.h"
 
+// Forward declaration
+class CommandRegistry;
+
 class CommandFactory {
 public:
     static std::unique_ptr<ICommand> createCommand(
@@ -16,7 +19,8 @@ public:
         const std::unordered_map<std::string, std::string>& flags,
         const std::vector<std::string>& args,
         bool* exitFlag = nullptr,
-        Editor* editor = nullptr);
+        Editor* editor = nullptr,
+        CommandRegistry* registry = nullptr);
 };
 
 #endif // COMMAND_FACTORY_H_

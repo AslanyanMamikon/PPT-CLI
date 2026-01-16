@@ -15,7 +15,7 @@ const ParserState Parser::transitionTable[][6] = {
 };
 
 Parser::Parser(std::istream& stream)
-    : tz(stream), exitFlagPtr(nullptr), editorPtr(nullptr) {
+    : tz(stream), exitFlagPtr(nullptr), editorPtr(nullptr), registryPtr(nullptr) {
 }
 
 std::string Parser::toLower(const std::string& s)
@@ -26,10 +26,11 @@ std::string Parser::toLower(const std::string& s)
     return out;
 }
 
-std::unique_ptr<ICommand> Parser::parse(bool* exitFlag, Editor* editor)
+std::unique_ptr<ICommand> Parser::parse(bool* exitFlag, Editor* editor, CommandRegistry* registry)
 {
     exitFlagPtr = exitFlag;
     editorPtr = editor;
+    registryPtr = registry;
     errorMsg.clear();
 
     std::string cmd;
@@ -103,7 +104,8 @@ std::unique_ptr<ICommand> Parser::parse(bool* exitFlag, Editor* editor)
     }
 
     try {
-        return CommandFactory::createCommand(cmd, object, flags, args, exitFlagPtr, editorPtr);
+        return CommandFactory::createCommand(cmd, object, flags, args,
+            exitFlagPtr, editorPtr, registryPtr);
     }
     catch (const CommandValidationException& e)
     {

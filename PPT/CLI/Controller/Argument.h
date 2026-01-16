@@ -24,9 +24,9 @@ struct ArgumentInfo {
 
 /*
 ArgumentInfo layoutFlag = {
-    "-layout", 
-    ArgumentType::Enum, 
-    false, 
+    "-layout",
+    ArgumentType::Enum,
+    false,
     {"title", "blank", "content"}
 };
 */

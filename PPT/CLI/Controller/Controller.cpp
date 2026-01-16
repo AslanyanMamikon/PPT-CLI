@@ -1,11 +1,15 @@
 #include "Controller.h"
 #include "Parser.h"
+#include "CommandRegistry.h"
 
-Controller::Controller() : shouldExit(false) {}
+Controller::Controller() : shouldExit(false), registry(std::make_unique<CommandRegistry>()) {}
+
+Controller::~Controller() = default;  // Needed for unique_ptr to incomplete type
 
 void Controller::run() {
-    std::cout << "Presentation CLI (Action-based Architecture)\n";
-    std::cout << "Commands: add slide, remove slide, list, undo, redo, exit\n\n";
+    std::cout << "Presentation CLI\n";
+    std::cout << "Commands: add/remove slide, add/remove shape, list, undo, redo, help, exit\n";
+    std::cout << "Type 'help' for a list of all commands\n\n";
 
     std::string line;
     while (!shouldExit) {
@@ -28,7 +32,7 @@ bool Controller::processCommand(std::istream& stream) {
     try {
         Parser parser(stream);
 
-        std::unique_ptr<ICommand> command = parser.parse(&shouldExit, &editor);
+        std::unique_ptr<ICommand> command = parser.parse(&shouldExit, &editor, registry.get());
 
         if (!command) {
             lastError = parser.getError();

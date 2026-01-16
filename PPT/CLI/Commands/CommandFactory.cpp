@@ -10,6 +10,8 @@
 #include "ExitCommand.h"
 #include "SaveCommand.h"
 #include "RenderCommand.h"
+#include "HelpCommand.h"
+#include "CommandRegistry.h"
 
 std::unique_ptr<ICommand> CommandFactory::createCommand(
     const std::string& cmd,
@@ -17,8 +19,36 @@ std::unique_ptr<ICommand> CommandFactory::createCommand(
     const std::unordered_map<std::string, std::string>& flags,
     const std::vector<std::string>& args,
     bool* exitFlag,
-    Editor* editor)
+    Editor* editor,
+    CommandRegistry* registry)
 {
+    // Help command (requires registry)
+    if (cmd == "help") {
+        if (!registry) {
+            throw CommandValidationException("Help command requires registry reference");
+        }
+
+        // Build the full command name from object and args
+        std::string specificCmd;
+        if (!object.empty()) {
+            specificCmd = object;
+            // If there are args, the first arg might be part of the command name
+            if (!args.empty()) {
+                specificCmd = object + " " + args[0];
+            }
+        }
+        else if (!args.empty()) {
+            // No object, just args - first arg is the command
+            specificCmd = args[0];
+            // Check if there's a second arg (for two-word commands)
+            if (args.size() > 1) {
+                specificCmd = args[0] + " " + args[1];
+            }
+        }
+
+        return std::make_unique<HelpCommand>(*registry, specificCmd);
+    }
+
     // Undo/Redo commands (require editor)
     if (cmd == "undo") {
         if (!editor) {
@@ -41,6 +71,17 @@ std::unique_ptr<ICommand> CommandFactory::createCommand(
         return std::make_unique<ExitCommand>(object, flags, args, *exitFlag);
     }
 
+    // Try to use registry if available
+    if (registry) {
+        // Build full command name (e.g., "add slide", "remove shape")
+        std::string fullCmdName = object.empty() ? cmd : cmd + " " + object;
+
+        if (registry->hasCommand(fullCmdName)) {
+            return registry->createCommand(fullCmdName, object, flags, args, exitFlag, editor);
+        }
+    }
+
+    // Fallback to original factory logic for backward compatibility
     // Action-based commands
     if (editor) {
         if (cmd == "add" && object == "slide") {
